@@ -5,7 +5,11 @@ const { test, expect } = require('../../fixtures/fixtures');
 const { validUser, messages } = require('../../test-data/users');
 
 test.describe('Login - required scenarios', () => {
-  test('Successful login with valid credentials', async ({ page, loginPage, secureAreaPage }) => {
+  test('TC1 Successful login with valid username and password', async ({
+    page,
+    loginPage,
+    secureAreaPage,
+  }) => {
     await loginPage.open();
     await expect(loginPage.usernameInput).toBeVisible();
     await expect(loginPage.passwordInput).toBeVisible();

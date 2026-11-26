@@ -5,7 +5,11 @@ const { test, expect } = require('../../fixtures/fixtures');
 const { validUser, invalidUsername, messages } = require('../../test-data/users');
 
 test.describe('Login - required scenarios', () => {
-  test('Invalid username with valid password', async ({ page, loginPage, secureAreaPage }) => {
+  test('TC2 Invalid username with valid password is rejected', async ({
+    page,
+    loginPage,
+    secureAreaPage,
+  }) => {
     await loginPage.open();
     await expect(loginPage.heading).toBeVisible();
 

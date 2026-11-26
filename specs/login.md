@@ -2,7 +2,20 @@
 
 ## Application Overview
 
-Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure) and logout. Conventions: JavaScript CommonJS, *.spec.js starting with `// @ts-check`; import test/expect from fixtures/fixtures.js; use loginPage and secureAreaPage fixtures (no raw selectors in tests; add missing elements/actions to page objects); credentials (validUser, invalidUsername, invalidPassword) and messages (loginSuccess, invalidUsername, invalidPassword, logoutSuccess, loginRequired) come from test-data/users.js; web-first assertions only, no waitForTimeout/networkidle. Every scenario is independent and starts from a fresh browser context on /login. Seed: tests/seed.spec.js. Each generated test keeps the header comments `// spec: specs/login.md` and `// seed: tests/seed.spec.js`. Observed on live site: success -> /secure with 'You logged into a secure area!'; wrong username (incl. empty both, empty username, leading/trailing spaces, SQL/XSS-like) -> 'Your username is invalid!'; valid username with wrong/empty/wrong-case password, or upper-case username with valid password -> 'Your password is invalid!'; logout -> /login with 'You logged out of the secure area!'; anonymous /secure -> /login with 'You must login to view the secure area!'; password field type=password; Enter key submits.
+Test plan for the login feature of https://the-internet.herokuapp.com/login: the login page, the secure area (/secure) it leads to, and logout. Valid credentials: tomsmith / SuperSecretPassword!.
+
+Conventions for every test generated from this plan:
+
+- JavaScript (CommonJS), never TypeScript. Files are *.spec.js and start with `// @ts-check`.
+- Import `test` and `expect` from fixtures/fixtures.js, never from @playwright/test.
+- Use the `loginPage` and `secureAreaPage` fixtures (pages/LoginPage.js, pages/SecureAreaPage.js, pages/BasePage.js). No raw selectors in tests; missing elements or actions are added to the page objects (flashMessage, dismissFlash, usernameInput, passwordInput, loginButton, login, loginWithEnter, heading, welcomeText, logoutButton, logout).
+- Credentials (validUser), invalid values, hostile inputs (hostileInputs.sqlInjection, hostileInputs.xss) and expected messages (messages.loginSuccess, invalidUsername, invalidPassword, logoutSuccess, loginRequired) come from test-data/users.js. Nothing is hardcoded in tests.
+- Web-first assertions only (await expect(locator)...). No waitForTimeout, no networkidle.
+- Every test is independent and starts from a fresh state (fresh browser context, not logged in).
+- Each generated test keeps the header comments `// spec: specs/login.md` and `// seed: tests/seed.spec.js`.
+- Seed file: tests/seed.spec.js. Required tests go in tests/required/, extra tests in tests/extra/.
+
+Observed on the live site during exploration: any failed login stays on /login with a flash message; message is "Your username is invalid!" when the username is unknown/empty/altered, and "Your password is invalid!" when the username is exactly tomsmith but the password is wrong or empty. Password input has type=password. Unauthenticated /secure redirects to /login with "You must login to view the secure area!". The flash message is removed from the DOM shortly after its close control is clicked (short animation, so use auto-retrying assertions).
 
 ## Test Scenarios
 
@@ -10,32 +23,30 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Seed:** `tests/seed.spec.js`
 
-#### 1.1. Successful login with valid credentials
+#### 1.1. TC1 Successful login with valid username and password
 
 **File:** `tests/required/successful-login-with-valid-credentials.spec.js`
 
 **Steps:**
 
-1. Header: // spec: specs/login.md ; // seed: tests/seed.spec.js. Starting from fresh state, open /login (loginPage). - expect: Login page displays with username field, password field and Login button
-2. Enter validUser.username and validUser.password, click Login. - expect: URL is /secure - expect: Flash message contains messages.loginSuccess - expect: Heading 'Secure Area' is visible - expect: Text 'Welcome to the Secure Area. When you are done click logout below.' is visible - expect: Logout button/link is visible
+1. Open /login via loginPage.open() - expect: Login Page heading is visible
+2. Call loginPage.login(validUser.username, validUser.password) - expect: URL is /secure - expect: Flash message contains messages.loginSuccess - expect: secureAreaPage.heading and welcomeText are visible - expect: secureAreaPage.logoutButton is visible
 
-#### 1.2. Invalid username with valid password
+#### 1.2. TC2 Invalid username with valid password is rejected
 
 **File:** `tests/required/invalid-username-with-valid-password.spec.js`
 
 **Steps:**
 
-1. Header: // spec: specs/login.md ; // seed: tests/seed.spec.js. Open /login from fresh state. - expect: Login form shown
-2. Enter invalidUsername and validUser.password, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: Login form still visible; no Secure Area content
+1. Open /login and call loginPage.login(invalidUsername, validUser.password) - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: Login form is still visible - expect: Logout link is not present
 
-#### 1.3. Valid username with invalid password
+#### 1.3. TC3 Valid username with invalid password is rejected
 
 **File:** `tests/required/valid-username-with-invalid-password.spec.js`
 
 **Steps:**
 
-1. Header: // spec: specs/login.md ; // seed: tests/seed.spec.js. Open /login from fresh state. - expect: Login form shown
-2. Enter validUser.username and invalidPassword, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidPassword - expect: Login form still visible; no Secure Area content
+1. Open /login and call loginPage.login(validUser.username, invalidPassword) - expect: URL remains /login - expect: Flash message contains messages.invalidPassword - expect: Login form is still visible - expect: Logout link is not present
 
 ### 2. Login - extra scenarios
 
@@ -47,7 +58,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Header: // spec: specs/login.md ; // seed: tests/seed.spec.js. Open /login, leave both fields empty, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername
+1. Open /login, leave both fields empty, click Login - expect: URL remains /login - expect: Flash message contains messages.invalidUsername (observed: username message, not a password message)
 
 #### 2.2. Valid username with empty password
 
@@ -55,7 +66,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Open /login, enter validUser.username only, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidPassword
+1. Open /login, login with validUser.username and an empty password - expect: URL remains /login - expect: Flash message contains messages.invalidPassword
 
 #### 2.3. Empty username with valid password
 
@@ -63,7 +74,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Open /login, enter validUser.password only, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername
+1. Open /login, login with an empty username and validUser.password - expect: URL remains /login - expect: Flash message contains messages.invalidUsername
 
 #### 2.4. Username is case sensitive
 
@@ -71,7 +82,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Open /login, enter validUser.username in upper case with validUser.password, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidPassword (verified on the live site: the username lookup ignores case, but the login is still refused) - expect: Secure Area content is not visible
+1. Open /login, login with validUser.username upper-cased and validUser.password - expect: URL remains /login - expect: Flash message contains messages.invalidPassword (observed on live site: the upper-case username is refused with the password message, not the username message) - expect: Not logged in
 
 #### 2.5. Password is case sensitive
 
@@ -79,7 +90,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Open /login, enter validUser.username and validUser.password in lower case, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidPassword
+1. Open /login, login with validUser.username and validUser.password lower-cased - expect: URL remains /login - expect: Flash message contains messages.invalidPassword
 
 #### 2.6. Username with leading and trailing whitespace is rejected
 
@@ -87,47 +98,49 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Open /login, enter validUser.username surrounded by spaces with valid password, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername
+1. Open /login, login with ' ' + validUser.username + ' ' and validUser.password - expect: URL remains /login - expect: Flash message contains messages.invalidUsername (observed) - expect: Not logged in
 
-#### 2.7. SQL injection-like input is rejected
-
-**File:** `tests/extra/security/sql-injection-like-input-is-rejected.spec.js`
-
-**Steps:**
-
-1. Open /login, enter "' OR 1=1 --" as username and any password, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: No access to /secure
-
-#### 2.8. XSS-like input is rejected and not executed
-
-**File:** `tests/extra/security/xss-like-input-is-rejected-and-not-executed.spec.js`
-
-**Steps:**
-
-1. Open /login, register a dialog listener, enter '<script>alert(1)</script>' as username and any password, click Login. - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: No dialog appeared; the script text is not rendered as executable markup
-
-#### 2.9. Password field masks input
+#### 2.7. Password field masks input
 
 **File:** `tests/extra/form/password-field-masks-input.spec.js`
 
 **Steps:**
 
-1. Open /login, type a value into the password field. - expect: Password input has type 'password' so characters are masked
+1. Open /login and fill the password field with validUser.password - expect: passwordInput has attribute type=password - expect: Typed value is not shown as plain text
 
-#### 2.10. Submit login with Enter key
+#### 2.8. Submit login with Enter key
 
 **File:** `tests/extra/form/submit-login-with-enter-key.spec.js`
 
 **Steps:**
 
-1. Open /login, fill valid credentials, press Enter in the password field. - expect: URL is /secure - expect: Flash message contains messages.loginSuccess
+1. Open /login and call loginPage.loginWithEnter(validUser.username, validUser.password) - expect: URL is /secure - expect: Flash message contains messages.loginSuccess - expect: Secure Area heading is visible
 
-#### 2.11. Dismiss flash message
+#### 2.9. Dismiss flash message
 
 **File:** `tests/extra/form/dismiss-flash-message.spec.js`
 
 **Steps:**
 
-1. Trigger an invalid login to show the error flash, click the close (x) control on the message. - expect: Error message is no longer visible (to be confirmed during generation: live check showed the element remained in the DOM, so assert on visibility, and add a page-object helper if needed) - expect: User remains on /login
+1. Trigger a failed login so the flash message is shown - expect: Flash message is visible
+2. Call loginPage.dismissFlash() (click the x control) - expect: Flash message is hidden (removed from the page; use auto-retrying toBeHidden because of a short close animation) - expect: Login form remains usable
+
+#### 2.10. SQL injection-like input is rejected
+
+**File:** `tests/extra/security/sql-injection-like-input-is-rejected.spec.js`
+
+**Steps:**
+
+1. Open /login, login with hostileInputs.sqlInjection as username and any non-valid password - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: Not logged in
+2. Repeat with hostileInputs.sqlInjection as the password and valid username - expect: Flash message contains messages.invalidPassword (optional variant)
+
+#### 2.11. XSS-like input is rejected and not executed
+
+**File:** `tests/extra/security/xss-like-input-is-rejected-and-not-executed.spec.js`
+
+**Steps:**
+
+1. Register a page 'dialog' listener that records any dialog, then login with hostileInputs.xss as username and a non-valid password - expect: URL remains /login - expect: Flash message contains messages.invalidUsername - expect: No alert dialog was raised - expect: Script text is not rendered as an active element in the flash message
 
 #### 2.12. Logout returns to login with confirmation message
 
@@ -135,7 +148,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Log in with valid credentials (fresh context), then click Logout in secureAreaPage. - expect: URL is /login - expect: Flash message contains messages.logoutSuccess - expect: Login form is visible
+1. Log in with validUser, then call secureAreaPage.logout() - expect: URL is /login - expect: Flash message contains messages.logoutSuccess - expect: Login form is visible
 
 #### 2.13. Accessing /secure while logged out redirects to login
 
@@ -143,7 +156,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. In a fresh context, navigate directly to /secure. - expect: URL is /login - expect: Flash message contains messages.loginRequired - expect: Secure Area content is not visible
+1. In a fresh context, open /secure via secureAreaPage.open() - expect: URL is /login - expect: Flash message contains messages.loginRequired - expect: Secure Area heading is not shown
 
 #### 2.14. Secure area is inaccessible after logout
 
@@ -151,7 +164,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Log in, log out, then navigate directly to /secure. - expect: URL is /login - expect: Flash message contains messages.loginRequired
+1. Log in, log out, then open /secure - expect: URL is /login - expect: Flash message contains messages.loginRequired
 
 #### 2.15. Back button after logout does not allow new secure actions
 
@@ -159,7 +172,8 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Log in, log out, then use browser Back. - expect: Observed live: Back shows the cached /secure page. Assert the session is invalid by reloading the page: URL becomes /login with messages.loginRequired
+1. Log in, log out, then navigate back in history - expect: Observed: browser shows a cached /secure page (heading visible); this is not asserted as a defect
+2. Reload the page - expect: URL is /login - expect: Flash message contains messages.loginRequired (observed)
 
 #### 2.16. Session persists on reload of /secure
 
@@ -167,7 +181,7 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Log in, reload /secure. - expect: URL stays /secure and Secure Area heading is visible
+1. Log in, then reload the page - expect: URL stays /secure - expect: Secure Area heading and Logout link are visible
 
 #### 2.17. Visiting /login while logged in still shows login page
 
@@ -175,4 +189,5 @@ Test plan for https://the-internet.herokuapp.com/login, the secure area (/secure
 
 **Steps:**
 
-1. Log in, then navigate to /login. (Behaviour not verified; record the actual behaviour as the assertion during generation.) - expect: Page renders without error and the user can still reach /secure
+1. Log in, then open /login via loginPage.open() - expect: URL is /login (no redirect) - expect: Normal login form (username, password, Login button) is visible
+2. Open /secure afterwards - expect: URL is /secure and Secure Area heading is visible (session is still active)
