@@ -172,8 +172,8 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 **Steps:**
 
-1. Log in, log out, then navigate back in history - expect: Observed: browser shows a cached /secure page (heading visible); this is not asserted as a defect
-2. Reload the page - expect: URL is /login - expect: Flash message contains messages.loginRequired (observed)
+1. Log in, log out, then navigate back in history - expect: Observed: Chromium and Firefox show a cached /secure page (heading visible); WebKit asks the server and lands on /login with messages.loginRequired. Neither is asserted.
+2. Reload the page - expect: URL is /login - expect: Login Page heading is visible - expect: Secure Area heading is not visible - note: messages.loginRequired is shown only once, so after the reload it is present in Chromium and Firefox but not in WebKit, and is not asserted
 
 #### 2.16. Session persists on reload of /secure
 

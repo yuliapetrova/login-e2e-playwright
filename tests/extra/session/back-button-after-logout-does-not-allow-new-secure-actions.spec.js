@@ -16,12 +16,15 @@ test.describe('Login - extra scenarios', () => {
     await secureAreaPage.logout();
     await expect(loginPage.flashMessage).toContainText(messages.logoutSuccess);
 
-    // Back may show a cached copy of /secure, so reload to ask the server.
+    // Chromium and Firefox show a cached copy of /secure on Back. WebKit asks
+    // the server instead and is redirected to /login straight away. Reloading
+    // asks the server in every browser. The "You must login" message is shown
+    // only once, so it is gone after the reload in WebKit and is not asserted.
     await page.goBack();
     await page.reload();
 
     await expect(page).toHaveURL(/\/login$/);
-    await expect(loginPage.flashMessage).toContainText(messages.loginRequired);
+    await expect(loginPage.heading).toBeVisible();
     await expect(secureAreaPage.heading).toBeHidden();
   });
 });
