@@ -1,0 +1,30 @@
+{
+  "name": "login-e2e-playwright",
+  "version": "1.0.0",
+  "description": "Playwright test automation for the login page of the-internet.herokuapp.com",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:required": "playwright test tests/required",
+    "test:extra": "playwright test tests/extra",
+    "test:chromium": "playwright test --project=chromium",
+    "test:headed": "playwright test --project=chromium --headed",
+    "test:shuffle": "playwright test --project=chromium --repeat-each=3 --workers=4 --fully-parallel",
+    "report": "playwright show-report",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write ."
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-playwright": "^2.12.2",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1"
+  }
+}
