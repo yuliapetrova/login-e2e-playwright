@@ -4,6 +4,10 @@ Automated UI tests for the login page of
 [the-internet.herokuapp.com](https://the-internet.herokuapp.com/login),
 built with [Playwright](https://playwright.dev/) and JavaScript.
 
+[![Playwright Tests](https://github.com/yuliapetrova/login-e2e-playwright/actions/workflows/playwright.yml/badge.svg)](https://github.com/yuliapetrova/login-e2e-playwright/actions/workflows/playwright.yml)
+
+**Latest test report:** https://yuliapetrova.github.io/login-e2e-playwright/
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18 or newer (developed on Node 22)
@@ -96,7 +100,7 @@ login-e2e-playwright/
 - **Several checks per scenario.** A login is judged by URL, message text, message type and page content together, so a partial failure is not missed.
 - **Externalised data and config.** Credentials and expected messages live in one data file and can be overridden with environment variables.
 - **Debugging support.** Failed tests keep a screenshot and video. Retried tests in CI keep a full trace.
-- **CI.** GitHub Actions lints the code, runs all tests in three browsers and uploads the HTML report on every push.
+- **CI.** GitHub Actions lints the code and runs all tests in three browsers on every push and pull request. Each run on `main` publishes the HTML report to GitHub Pages, including when tests fail.
 
 ## Extending this for a larger project
 
