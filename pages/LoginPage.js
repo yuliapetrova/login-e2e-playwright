@@ -1,5 +1,6 @@
 // @ts-check
 const { BasePage } = require('./BasePage');
+const { endpoints } = require('../test-data/api');
 
 /** Page object for /login. */
 class LoginPage extends BasePage {
@@ -32,6 +33,18 @@ class LoginPage extends BasePage {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.passwordInput.press('Enter');
+  }
+
+  /**
+   * Start waiting for the server's answer to the login form.
+   * Call it before submitting, then await the returned promise.
+   * @returns {Promise<import('@playwright/test').Response>}
+   */
+  waitForAuthenticateResponse() {
+    return this.page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' && new URL(response.url()).pathname === endpoints.authenticate,
+    );
   }
 }
 

@@ -62,11 +62,17 @@ login-e2e-playwright/
 │   ├── BasePage.js           Shared navigation and flash message locator
 │   ├── LoginPage.js          /login page
 │   └── SecureAreaPage.js     /secure page shown after login
+├── api/
+│   └── AuthApi.js            HTTP client for status code checks
 ├── fixtures/
-│   └── fixtures.js           Injects page objects into tests
+│   └── fixtures.js           Injects page objects and the API client into tests
 ├── test-data/
-│   └── users.js              Credentials and expected messages
+│   ├── users.js              Credentials, hostile inputs and expected messages
+│   └── api.js                Endpoints and expected status codes
+├── specs/
+│   └── login.md              Test plan the tests are built from
 ├── tests/
+│   ├── seed.spec.js          Starting point for the Playwright agents
 │   ├── required/             The three test cases from the assignment
 │   └── extra/                Additional coverage beyond the assignment
 ├── .github/workflows/        GitHub Actions pipeline
@@ -86,9 +92,23 @@ login-e2e-playwright/
 
 ### Extra (`tests/extra`)
 
-- **Data-driven negative cases.** Empty fields, wrong letter case, surrounding spaces and an SQL injection style input. New cases are added as rows in one table.
-- **Session behaviour.** Logout returns to the login page. The secure area is not reachable before login or after logout.
-- **Form behaviour.** The password field masks input, and the form submits with the Enter key.
+- **Form behaviour (`form/`).** Empty fields, wrong letter case and surrounding spaces are rejected with the right message. The password field masks input, the form submits with the Enter key, and the flash message can be closed.
+- **Hostile input (`security/`).** SQL injection and XSS style inputs are rejected, and the script never runs.
+- **Session behaviour (`session/`).** Logout returns to the login page. The secure area is not reachable before login, after logout, or by pressing Back after logout. The session survives a reload. The login request answers 303 to the secure area.
+- **API status codes (`api/`).** Without a browser, each endpoint returns the expected code and redirect target:
+
+| Request                             | Code | Redirects to |
+| ----------------------------------- | ---- | ------------ |
+| Open `/login`                       | 200  |              |
+| Submit valid credentials            | 303  | `/secure`    |
+| Submit invalid username or password | 303  | `/login`     |
+| Open `/secure` while logged in      | 200  |              |
+| Open `/secure` while logged out     | 302  | `/login`     |
+| Log out                             | 302  | `/login`     |
+
+A failed login answers 303, not 401. The form follows the post/redirect/get pattern, so this is expected, and the tests pin it down.
+
+`tests/seed.spec.js` is not part of the coverage. The Playwright Test Agents run it to set up the browser and copy its conventions when they plan, generate or fix tests.
 
 ## Design decisions
 
@@ -98,6 +118,7 @@ login-e2e-playwright/
 - **Independent tests.** Each test gets a fresh browser context and logs in on its own. Tests run fully in parallel and in any order.
 - **Web-first assertions.** All checks use Playwright's auto-retrying `expect`, never fixed waits. This keeps the tests stable when the Heroku host is slow.
 - **Several checks per scenario.** A login is judged by URL, message text, message type and page content together, so a partial failure is not missed.
+- **API checks next to UI checks.** Status codes are asserted at the HTTP level, where they are fast and precise. One UI test also watches the real login request, tying the browser flow to the server's answer. Error responses are not mocked, because the site has no client-side error handling to exercise.
 - **Externalised data and config.** Credentials and expected messages live in one data file and can be overridden with environment variables.
 - **Debugging support.** Failed tests keep a screenshot and video. Retried tests in CI keep a full trace.
 - **CI.** GitHub Actions lints the code and runs all tests in three browsers on every push and pull request. Each run on `main` publishes the HTML report to GitHub Pages, including when tests fail.

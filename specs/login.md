@@ -191,3 +191,48 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 1. Log in, then open /login via loginPage.open() - expect: URL is /login (no redirect) - expect: Normal login form (username, password, Login button) is visible
 2. Open /secure afterwards - expect: URL is /secure and Secure Area heading is visible (session is still active)
+
+### 3. Login - API status codes
+
+**Seed:** `tests/seed.spec.js`
+
+Checked at the HTTP level with the `authApi` fixture, which never follows redirects. Endpoints and codes come from `test-data/api.js`. All tests live in `tests/extra/api/auth-status-codes.spec.js`. Each test starts with fresh cookies.
+
+#### 3.1. Login page returns 200
+
+1. GET /login - expect: status 200
+
+#### 3.2. Valid credentials answer 303 to the secure area
+
+1. POST /authenticate with validUser - expect: status 303 - expect: Location path is /secure
+
+#### 3.3. Invalid username answers 303 back to login
+
+1. POST /authenticate with invalidUsername and validUser.password - expect: status 303 - expect: Location path is /login
+
+#### 3.4. Invalid password answers 303 back to login
+
+1. POST /authenticate with validUser.username and invalidPassword - expect: status 303 - expect: Location path is /login
+
+#### 3.5. Secure area returns 200 when logged in
+
+1. POST /authenticate with validUser, then GET /secure - expect: status 200
+
+#### 3.6. Secure area answers 302 to login when logged out
+
+1. GET /secure with no session - expect: status 302 - expect: Location path is /login
+
+#### 3.7. Logout answers 302 to login and ends the session
+
+1. Log in, then GET /logout - expect: status 302 - expect: Location path is /login
+2. GET /secure - expect: status 302 - expect: Location path is /login
+
+### 4. Login - network check in the UI
+
+#### 4.1. Login request answers 303 to the secure area
+
+**File:** `tests/extra/session/login-request-answers-303-to-secure.spec.js`
+
+**Steps:**
+
+1. Open /login, start waiting for the POST /authenticate response with loginPage.waitForAuthenticateResponse(), then log in with validUser - expect: status 303 - expect: Location path is /secure - expect: URL is /secure and Secure Area heading is visible
