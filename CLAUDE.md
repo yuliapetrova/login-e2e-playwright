@@ -10,7 +10,13 @@ This project uses Playwright Test Agents (`.claude/agents/`) with the
 - Use the page objects from `pages/` through fixtures (`loginPage`, `secureAreaPage`). Do not put raw selectors in tests.
   If a test needs an element or action that is missing, add it to the right page object.
 - For HTTP-level checks, use the `authApi` fixture from `api/AuthApi.js`. Take endpoints and status codes from `test-data/api.js`.
+- Check URLs with the page objects' `urlPattern`, for example `await expect(page).toHaveURL(loginPage.urlPattern)`. Do not write URL patterns in tests.
 - Take credentials and expected messages from `test-data/users.js`. Do not hardcode them in tests.
+- New invalid-login cases are rows in `invalidLogins` in `test-data/users.js`, not new test files.
+- When a test only needs a logged-in starting point, use the `loginViaApi` fixture, then open the page. Only tests about the login form itself log in through the UI.
+- Wrap new page-object actions in `this.step(...)` so they appear as named steps in the report. Never put a password in a step title.
+- Tag every test: `@smoke` for the required tests, `@regression` for all others, plus `@api` or `@a11y` where they apply. Use `test('title', { tag: [...] }, async (...) => {})`.
+- After the key check, use `expect.soft` for the remaining checks in a test so every failure is reported.
 - Use web-first assertions (`await expect(locator)...`). No `waitForTimeout`, no `networkidle`.
 - Every test is independent and starts from a fresh state.
 - The seed file is `tests/seed.spec.js`. Normal runs skip it; it runs only when `PLAYWRIGHT_AGENTS=1` is set, as `.mcp.json` does for the agents.
@@ -24,4 +30,4 @@ This project uses Playwright Test Agents (`.claude/agents/`) with the
 
 ## Checks before finishing
 
-Run `npm run lint` and `npx playwright test --project=chromium`. Both must pass.
+Run `npm run lint` and `npx playwright test --project=chromium --project=api`. Both must pass.

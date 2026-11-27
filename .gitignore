@@ -7,3 +7,4 @@ playwright/.cache/
 .DS_Store
 .playwright-mcp/
 .claude/settings.local.json
+reports/

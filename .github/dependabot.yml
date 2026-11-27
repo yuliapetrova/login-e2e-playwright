@@ -1,0 +1,16 @@
+# Weekly pull requests for npm packages and GitHub Actions updates.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      playwright:
+        patterns: ['@playwright/*', 'playwright', '@axe-core/playwright']
+      lint-and-format:
+        patterns: ['eslint*', '@eslint/*', 'globals', 'prettier', 'husky', 'lint-staged']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

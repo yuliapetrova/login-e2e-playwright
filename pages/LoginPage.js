@@ -6,7 +6,7 @@ const { endpoints } = require('../test-data/api');
 class LoginPage extends BasePage {
   /** @param {import('@playwright/test').Page} page */
   constructor(page) {
-    super(page, '/login');
+    super(page, endpoints.login);
     this.heading = page.getByRole('heading', { name: 'Login Page' });
     this.usernameInput = page.getByLabel('Username');
     this.passwordInput = page.getByLabel('Password');
@@ -14,14 +14,17 @@ class LoginPage extends BasePage {
   }
 
   /**
-   * Fill in the form and submit it.
+   * Fill in the form and submit it. The step title shows the username
+   * but never the password.
    * @param {string} username
    * @param {string} password
    */
   async login(username, password) {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.loginButton.click();
+    await this.step(`Log in as "${username}"`, async () => {
+      await this.usernameInput.fill(username);
+      await this.passwordInput.fill(password);
+      await this.loginButton.click();
+    });
   }
 
   /**
@@ -30,9 +33,21 @@ class LoginPage extends BasePage {
    * @param {string} password
    */
   async loginWithEnter(username, password) {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.passwordInput.press('Enter');
+    await this.step(`Log in as "${username}" with the Enter key`, async () => {
+      await this.usernameInput.fill(username);
+      await this.passwordInput.fill(password);
+      await this.passwordInput.press('Enter');
+    });
+  }
+
+  /**
+   * Type into the password field without submitting.
+   * @param {string} password
+   */
+  async typePassword(password) {
+    await this.step('Type a password', async () => {
+      await this.passwordInput.fill(password);
+    });
   }
 
   /**

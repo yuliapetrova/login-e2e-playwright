@@ -7,24 +7,39 @@
     "test": "playwright test",
     "test:required": "playwright test tests/required",
     "test:extra": "playwright test tests/extra",
-    "test:chromium": "playwright test --project=chromium",
+    "test:chromium": "playwright test --project=chromium --project=api",
     "test:headed": "playwright test --project=chromium --headed",
-    "test:shuffle": "playwright test --project=chromium --repeat-each=3 --workers=4 --fully-parallel",
+    "test:shuffle": "playwright test --project=chromium --project=api --repeat-each=3 --workers=4 --fully-parallel",
     "report": "playwright show-report",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:fix": "eslint . --fix && prettier --write ."
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "prepare": "husky",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test --grep @regression",
+    "test:api": "playwright test --project=api",
+    "test:a11y": "playwright test --grep @a11y"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "eslint": "^10.15.0",
     "eslint-plugin-playwright": "^2.12.2",
     "globals": "^17.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.10.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
   }
 }

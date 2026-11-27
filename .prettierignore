@@ -7,3 +7,4 @@ package-lock.json
 .claude/agents/
 .mcp.json
 .playwright-mcp/
+reports/

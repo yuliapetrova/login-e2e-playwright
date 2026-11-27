@@ -52,9 +52,11 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 **Seed:** `tests/seed.spec.js`
 
+Conventions for this group: every test is tagged `@regression`. URL checks use the page objects' `urlPattern`. Scenarios that only need a logged-in starting point (2.12 onwards, except the anonymous and network checks) log in with the `loginViaApi` fixture instead of the form, since TC1 covers the form login. The negative login scenarios marked as data-driven share one test body and are driven by the `invalidLogins` table, so a new case is a new row. Required scenarios (group 1) are tagged `@smoke`.
+
 #### 2.1. Empty username and empty password
 
-**File:** `tests/extra/form/empty-username-and-empty-password.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -62,7 +64,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.2. Valid username with empty password
 
-**File:** `tests/extra/form/valid-username-with-empty-password.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -70,7 +72,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.3. Empty username with valid password
 
-**File:** `tests/extra/form/empty-username-with-valid-password.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -78,7 +80,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.4. Username is case sensitive
 
-**File:** `tests/extra/form/username-is-case-sensitive.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -86,7 +88,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.5. Password is case sensitive
 
-**File:** `tests/extra/form/password-is-case-sensitive.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -94,7 +96,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.6. Username with leading and trailing whitespace is rejected
 
-**File:** `tests/extra/form/username-with-leading-and-trailing-whitespace-is-rejected.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -127,7 +129,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 #### 2.10. SQL injection-like input is rejected
 
-**File:** `tests/extra/security/sql-injection-like-input-is-rejected.spec.js`
+**File:** `tests/extra/form/invalid-logins.spec.js` (data-driven: one row of `invalidLogins` in `test-data/users.js`)
 
 **Steps:**
 
@@ -196,6 +198,8 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 **Seed:** `tests/seed.spec.js`
 
+Tagged `@api` and `@regression`. Runs once in the `api` project, without a browser.
+
 Checked at the HTTP level with the `authApi` fixture, which never follows redirects. Endpoints and codes come from `test-data/api.js`. All tests live in `tests/extra/api/auth-status-codes.spec.js`. Each test starts with fresh cookies.
 
 #### 3.1. Login page returns 200
@@ -236,3 +240,23 @@ Checked at the HTTP level with the `authApi` fixture, which never follows redire
 **Steps:**
 
 1. Open /login, start waiting for the POST /authenticate response with loginPage.waitForAuthenticateResponse(), then log in with validUser - expect: status 303 - expect: Location path is /secure - expect: URL is /secure and Secure Area heading is visible
+
+### 5. Login - accessibility
+
+**Seed:** `tests/seed.spec.js`
+
+**File:** `tests/extra/accessibility/login-and-secure-pages-are-accessible.spec.js`
+
+Checked with axe-core through the `makeAxeBuilder` fixture, limited to the WCAG 2.0 and 2.1 A and AA rules in `test-data/accessibility.js`. Tagged `@regression` and `@a11y`. All three pages were free of violations on the live site on 2026-11-27.
+
+#### 5.1. Login page has no WCAG A or AA violations
+
+1. Open /login and wait for the heading - expect: axe reports no violations
+
+#### 5.2. Login page with an error message has no WCAG A or AA violations
+
+1. Open /login, submit validUser.username with an empty password, wait for the flash message - expect: axe reports no violations
+
+#### 5.3. Secure area has no WCAG A or AA violations
+
+1. Log in with `loginViaApi`, open /secure and wait for the heading - expect: axe reports no violations

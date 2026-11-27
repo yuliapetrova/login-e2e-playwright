@@ -5,7 +5,7 @@ const { test, expect } = require('../../../fixtures/fixtures');
 const { invalidUsername, invalidPassword, messages } = require('../../../test-data/users');
 
 test.describe('Login - extra scenarios', () => {
-  test('Dismiss flash message', async ({ page, loginPage }) => {
+  test('Dismiss flash message', { tag: ['@regression'] }, async ({ page, loginPage }) => {
     await loginPage.open();
     await loginPage.login(invalidUsername, invalidPassword);
     await expect(loginPage.flashMessage).toContainText(messages.invalidUsername);
@@ -13,6 +13,6 @@ test.describe('Login - extra scenarios', () => {
     await loginPage.dismissFlash();
 
     await expect(loginPage.flashMessage).toBeHidden();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(loginPage.urlPattern);
   });
 });

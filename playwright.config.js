@@ -7,6 +7,13 @@ const isCI = !!process.env.CI;
 // adds no coverage, so normal runs skip it. The agents' MCP server sets
 // PLAYWRIGHT_AGENTS in .mcp.json so they can still run it.
 const runSeed = !!process.env.PLAYWRIGHT_AGENTS;
+const seedTests = '**/seed.spec.js';
+
+// API tests need no browser, so they run once in their own project.
+const apiTests = '**/extra/api/**/*.spec.js';
+
+// Browser projects skip the API tests, and the seed test unless the agents run.
+const browserIgnore = runSeed ? [apiTests] : [apiTests, seedTests];
 
 /**
  * Playwright configuration.
@@ -14,7 +21,6 @@ const runSeed = !!process.env.PLAYWRIGHT_AGENTS;
  */
 module.exports = defineConfig({
   testDir: './tests',
-  testIgnore: runSeed ? [] : ['**/seed.spec.js'],
   fullyParallel: true,
   forbidOnly: isCI,
   // The demo site is hosted on Heroku and can be slow, so allow retries in CI only.
@@ -22,7 +28,17 @@ module.exports = defineConfig({
   workers: isCI ? 2 : undefined,
   timeout: 30_000,
   expect: { timeout: 10_000 },
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // In CI, the GitHub reporter annotates failures on the code, and the JSON
+  // and JUnit files feed the run summary and any other CI tooling.
+  reporter: isCI
+    ? [
+        ['list'],
+        ['github'],
+        ['html', { open: 'never' }],
+        ['json', { outputFile: 'reports/results.json' }],
+        ['junit', { outputFile: 'reports/junit.xml' }],
+      ]
+    : [['list'], ['html', { open: 'never' }]],
 
   use: {
     baseURL: process.env.BASE_URL || 'https://the-internet.herokuapp.com',
@@ -33,8 +49,9 @@ module.exports = defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'api', testMatch: apiTests },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: browserIgnore },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: browserIgnore },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: browserIgnore },
   ],
 });

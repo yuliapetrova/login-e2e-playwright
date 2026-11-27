@@ -68,7 +68,7 @@ End your turn here. Build only the scenarios the user approved.
    - credentials, inputs and messages from `test-data/users.js`, adding new values there,
    - web-first assertions only, with no `waitForTimeout` and no `networkidle`.
 3. Run `npm run lint:fix`, then `npm run lint`, and fix anything it still reports.
-4. Run the new tests once with `npx playwright test --project=chromium <files>`. Do not fix
+4. Run the new tests once with `npx playwright test --project=chromium --project=api <files>`. Do not fix
    failures yet. Record the results for the gate.
 
 ### Gate 2: Review the code
@@ -109,7 +109,7 @@ End your turn here.
 
    ```
    npm run lint
-   npx playwright test --project=chromium
+   npx playwright test --project=chromium --project=api
    ```
 
    Both must pass. If a test fails that the healer already worked on, report it instead of
