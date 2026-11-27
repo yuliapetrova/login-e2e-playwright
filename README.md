@@ -108,7 +108,7 @@ login-e2e-playwright/
 
 A failed login answers 303, not 401. The form follows the post/redirect/get pattern, so this is expected, and the tests pin it down.
 
-`tests/seed.spec.js` is not part of the coverage. The Playwright Test Agents run it to set up the browser and copy its conventions when they plan, generate or fix tests.
+`tests/seed.spec.js` is not part of the coverage, so normal runs skip it. The Playwright Test Agents run it to set up the browser and copy its conventions when they plan, generate or fix tests. Their MCP server sets `PLAYWRIGHT_AGENTS=1` in `.mcp.json`, which brings the seed test back into scope. To run it by hand, use `PLAYWRIGHT_AGENTS=1 npx playwright test tests/seed.spec.js`.
 
 ## Design decisions
 

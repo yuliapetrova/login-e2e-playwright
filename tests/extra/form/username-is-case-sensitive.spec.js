@@ -9,10 +9,13 @@ test.describe('Login - extra scenarios', () => {
     await loginPage.open();
     await loginPage.login(validUser.username.toUpperCase(), validUser.password);
 
-    // Observed on the live site: the username lookup ignores case, but the
-    // login is still refused and the site reports the password as invalid.
+    // The live site has answered this case both ways: "Your password is
+    // invalid!" on 2026-11-26 and "Your username is invalid!" from 2026-11-27.
+    // Either error proves the login is refused, which is what this test checks.
     await expect(page).toHaveURL(/\/login$/);
-    await expect(loginPage.flashMessage).toContainText(messages.invalidPassword);
+    await expect(loginPage.flashMessage).toContainText(
+      new RegExp(`${messages.invalidUsername}|${messages.invalidPassword}`),
+    );
     await expect(secureAreaPage.heading).toBeHidden();
   });
 });

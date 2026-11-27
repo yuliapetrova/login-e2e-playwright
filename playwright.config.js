@@ -3,12 +3,18 @@ const { defineConfig, devices } = require('@playwright/test');
 
 const isCI = !!process.env.CI;
 
+// The seed test only prepares the browser for the Playwright Test Agents and
+// adds no coverage, so normal runs skip it. The agents' MCP server sets
+// PLAYWRIGHT_AGENTS in .mcp.json so they can still run it.
+const runSeed = !!process.env.PLAYWRIGHT_AGENTS;
+
 /**
  * Playwright configuration.
  * See https://playwright.dev/docs/test-configuration
  */
 module.exports = defineConfig({
   testDir: './tests',
+  testIgnore: runSeed ? [] : ['**/seed.spec.js'],
   fullyParallel: true,
   forbidOnly: isCI,
   // The demo site is hosted on Heroku and can be slow, so allow retries in CI only.

@@ -13,7 +13,7 @@ This project uses Playwright Test Agents (`.claude/agents/`) with the
 - Take credentials and expected messages from `test-data/users.js`. Do not hardcode them in tests.
 - Use web-first assertions (`await expect(locator)...`). No `waitForTimeout`, no `networkidle`.
 - Every test is independent and starts from a fresh state.
-- The seed file is `tests/seed.spec.js`.
+- The seed file is `tests/seed.spec.js`. Normal runs skip it; it runs only when `PLAYWRIGHT_AGENTS=1` is set, as `.mcp.json` does for the agents.
 
 ## Where files go
 

@@ -82,7 +82,7 @@ Observed on the live site during exploration: any failed login stays on /login w
 
 **Steps:**
 
-1. Open /login, login with validUser.username upper-cased and validUser.password - expect: URL remains /login - expect: Flash message contains messages.invalidPassword (observed on live site: the upper-case username is refused with the password message, not the username message) - expect: Not logged in
+1. Open /login, login with validUser.username upper-cased and validUser.password - expect: URL remains /login - expect: Flash message contains messages.invalidUsername or messages.invalidPassword (the live site answered with the password message on 2026-11-26 and the username message from 2026-11-27, so either is accepted) - expect: Not logged in
 
 #### 2.5. Password is case sensitive
 
